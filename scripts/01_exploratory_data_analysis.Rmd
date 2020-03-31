@@ -1,0 +1,52 @@
+---
+title: "Cascade Gateway - explore"
+output: html_notebook
+---
+
+The [Cascade Gateway Border Data Warehouse](http://www.cascadegatewaydata.com/Crossing) provides detailed, real-time data for the major Canada/U.S. border crossings between British Columbia and Washington in the Lower Mainland/Pacific Northwest.
+
+* Lynden/Aldergrove
+
+* Pacific Highway
+
+* Peace Arch
+
+* Sumas/Huntingdon
+
+This is an initial exploration of the data, to understand the variables offered and how we might tabulate and visualize them.
+
+Exploratory data analysis!
+
+```{r setup}
+# tidyverse packages
+library(tidyverse)
+
+# utilities
+library(here)
+
+```
+
+## Data import, #1
+
+A csv file was downloaded via the "Custom Query" menu, with the following specifications:
+
+* Date: 2019-01-01 to 2020-03-31 (note the website uses mdy format)
+
+* Detector: none selected
+
+* Crossing: Peach Arch / Northbound / Peace Arch North Cars & Peace Arch North NEXUS
+
+* Weigh-in-Motion (WIM): none selected
+
+The file was renamed "peacearch_N_cars_20190101_2020-03-31.csv"
+
+```{r}
+
+df_peacearch <- read.csv(here("data", "peacearch_N_cars_20190101_2020-03-31.csv"))
+
+df_peacearch 
+
+```
+
+
+
