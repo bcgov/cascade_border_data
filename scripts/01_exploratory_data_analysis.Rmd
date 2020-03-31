@@ -33,7 +33,7 @@ library(janitor)
 
 A csv file was downloaded via the "Custom Query" menu, with the following specifications:
 
-* Date: 2019-01-01 to 2020-03-31 (note the website uses mdy format)
+* Date: 2018-01-01 to 2020-03-31 (note the website uses mdy format)
 
 * Detector: none selected
 
@@ -45,7 +45,7 @@ The file was renamed "peacearch_N_cars_20190101_2020-03-31.csv"
 
 ```{r}
 
-df_peacearch_prelim <- read_csv(here("data", "peacearch_N_cars_20190101_2020-03-31.csv"))
+df_peacearch_prelim <- read_csv(here("data", "peacearch_N_cars_20180101_2020-03-31.csv"))
 
 df_peacearch <- df_peacearch_prelim %>% 
   clean_names()
@@ -68,9 +68,22 @@ df_peacearch_nbound <- df_peacearch %>%
 
 ```
 
+quick plot
 ```{r}
 
-df_peacearch_nbound <-
+ggplot(df_peacearch_nbound, aes(x = ref_date, y = total_nbound)) +
+  geom_point() + 
+  geom_smooth()
+
+```
+
+
+
+#### Failed detour
+
+```{r}
+
+df_peacearch_nbound2 <-
   df_peacearch_nbound %>% 
   # add leading zeros to month and day fields
   mutate(ref_mon2 = 
@@ -88,14 +101,6 @@ df_peacearch_nbound <-
 ```
 
 
-```{r}
-
-ggplot(df_peacearch_nbound, aes(x = ref_date, y = total_nbound)) +
-  geom_point() + 
-  geom_smooth()
-
-```
-
 
 ```{r}
 
@@ -104,6 +109,40 @@ ggplot(df_peacearch_nbound, aes(x = ref_mon_day, y = total_nbound, colour = ref_
   geom_point() + 
   geom_smooth()
 
+
+```
+
+Well that's not entirely successful... perhaps a more direct comparison using `dplyr::lag()`
+
+
+### Lag
+
+```{r}
+df_peacearch_nbound <-
+df_peacearch_nbound %>%
+  mutate(yoy_chg = total_nbound - lag(total_nbound, n = 365))
+
+df_peacearch_nbound
+
+```
+
+```{r}
+
+p <- 
+df_peacearch_nbound %>% 
+  filter(ref_date >= as_date("2019-01-01")) %>% 
+ggplot(aes(ref_date, yoy_chg)) +
+  geom_point() +
+  geom_smooth()
+
+p 
+
+p +
+  labs(title = "Peace Arch, northbound cars",
+       subtitle = "year-over-year same-day change",
+       source = "http://www.cascadegatewaydata.com/")
+
+ggsave("peace_arch_nbound.png")
 
 ```
 
