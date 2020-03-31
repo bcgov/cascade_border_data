@@ -20,9 +20,12 @@ Exploratory data analysis!
 ```{r setup}
 # tidyverse packages
 library(tidyverse)
+library(lubridate)
+library(glue)
 
 # utilities
 library(here)
+library(janitor)
 
 ```
 
@@ -42,11 +45,65 @@ The file was renamed "peacearch_N_cars_20190101_2020-03-31.csv"
 
 ```{r}
 
-df_peacearch <- read.csv(here("data", "peacearch_N_cars_20190101_2020-03-31.csv"))
+df_peacearch_prelim <- read_csv(here("data", "peacearch_N_cars_20190101_2020-03-31.csv"))
 
-df_peacearch 
+df_peacearch <- df_peacearch_prelim %>% 
+  clean_names()
+
+df_peacearch
+```
+
+
+Data manipulation
+
+```{r}
+
+df_peacearch_nbound <- df_peacearch %>% 
+  mutate(ref_date = as_date(group_starts)) %>% 
+  mutate(ref_year = year(ref_date),
+         ref_mon = month(ref_date),
+         ref_day = day(ref_date)) %>% 
+  mutate(total_nbound = sum_volume_peace_arch_north_cars + sum_volume_peace_arch_north_nexus) %>% 
+  select(ref_date, ref_year:ref_day, total_nbound)
+
+```
+
+```{r}
+
+df_peacearch_nbound <-
+  df_peacearch_nbound %>% 
+  # add leading zeros to month and day fields
+  mutate(ref_mon2 = 
+           case_when(
+             ref_mon < 10 ~ glue("0{ref_mon}"),
+             TRUE ~ as.character(ref_mon))) %>% 
+  #
+  mutate(ref_day2 = 
+           case_when(
+             ref_day < 10 ~ glue("0{ref_day}"),
+             TRUE ~ as.character(ref_day))) %>% 
+  # combine into single "month-day" character string
+  unite(ref_mon_day, c(ref_mon2, ref_day2))
+  
+```
+
+
+```{r}
+
+ggplot(df_peacearch_nbound, aes(x = ref_date, y = total_nbound)) +
+  geom_point() + 
+  geom_smooth()
 
 ```
 
 
+```{r}
+
+
+ggplot(df_peacearch_nbound, aes(x = ref_mon_day, y = total_nbound, colour = ref_year)) +
+  geom_point() + 
+  geom_smooth()
+
+
+```
 
