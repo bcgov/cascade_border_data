@@ -119,7 +119,7 @@ df_peacearch_nbound2 <-
 ```{r}
 
 
-ggplot(df_peacearch_nbound, aes(x = ref_mon_day, y = total_nbound, colour = ref_year)) +
+ggplot(df_peacearch_nbound2, aes(x = ref_mon_day, y = total_nbound, colour = ref_year)) +
   geom_point() + 
   geom_smooth()
 
@@ -172,6 +172,7 @@ read data
 df_trucks_prelim <- read_csv(here("data", "all_trucks_20180101_20200331.csv"))
 ```
 
+setup
 
 ```{r}
 
@@ -184,7 +185,16 @@ df_trucks <- df_trucks_prelim %>%
 
 df_trucks
 
-df_trucks <- df_trucks %>% 
+
+```
+
+
+
+aggregate crossings into single north and south bound variables
+
+```{r}
+
+df_trucks_agg <- df_trucks %>% 
   group_by(ref_date) %>% 
   mutate(total_nbound = sum(
            sum_volume_lynden_aldergrove_north_trucks,
@@ -196,22 +206,22 @@ df_trucks <- df_trucks %>%
   ungroup() %>% 
   select(ref_date, ref_year:ref_day, total_nbound, total_sbound)
 
-df_trucks
+df_trucks_agg
 
 ```
 
 ```{r}
 
 
-df_trucks$nbound_rollavg <- 
-  rollapply(df_trucks$total_nbound, width = 28, FUN = mean, fill = NA, align='right')
+df_trucks_agg$nbound_rollavg <- 
+  rollapply(df_trucks_agg$total_nbound, width = 21, FUN = mean, fill = NA, align='right')
 
-df_trucks$sbound_rollavg <- 
-  rollapply(df_trucks$total_sbound, width = 28, FUN = mean, fill = NA, align='right')
+df_trucks_agg$sbound_rollavg <- 
+  rollapply(df_trucks_agg$total_sbound, width = 21, FUN = mean, fill = NA, align='right')
 
 
-df_trucks <- 
-df_trucks %>%
+df_trucks_agg <- 
+df_trucks_agg %>%
   mutate(nbound_365 = lag(nbound_rollavg, 365),
          sbound_365 = lag(sbound_rollavg, 365)) %>% 
   mutate(nbound_yoy = nbound_rollavg - lag(nbound_rollavg, 365),
@@ -219,9 +229,32 @@ df_trucks %>%
   mutate(nbound_pct_yoy = nbound_yoy / lag(nbound_rollavg, 365) * 100,
          sbound_pct_yoy = sbound_yoy / lag(sbound_rollavg, 365) * 100)
 
+```
 
-ggplot(df_trucks, aes(x = ref_date, y = nbound_rollavg)) +
-  geom_line()
+
+some plots
+
+```{r}
+ggplot(df_trucks_agg, aes(x = ref_date, y = nbound_rollavg)) +
+  geom_line() +
+  geom_smooth()
+
+ggplot(df_trucks_agg, aes(x = ref_date, y = nbound_yoy)) +
+  geom_line() +
+  geom_smooth()
+
+```
+
+
+Very noisy, even with long-term rolling average
+
+```{r}
+
+ggplot(df_trucks, aes(x = sum_volume_pacific_highway_north_trucks)) +
+  geom_histogram()
+
+ggplot(df_trucks, aes(x = sum_volume_pacific_highway_south_trucks)) +
+  geom_histogram()
 
 ```
 
