@@ -43,7 +43,7 @@ library(janitor)
 
 ```
 
-## Data import, #1
+## 1. Cars at Peace Arch
 
 A csv file was downloaded via the "Custom Query" menu, with the following specifications:
 
@@ -157,6 +157,71 @@ p +
        source = "http://www.cascadegatewaydata.com/")
 
 ggsave("peace_arch_nbound.png")
+
+```
+
+Perhaps a three day or seven day rolling average?
+
+
+
+## 2. Trucks at Douglas
+
+read data
+
+```{r}
+df_trucks_prelim <- read_csv(here("data", "all_trucks_20180101_20200331.csv"))
+```
+
+
+```{r}
+
+df_trucks <- df_trucks_prelim %>% 
+  clean_names() %>%
+  mutate(ref_date = as_date(group_starts)) %>% 
+  mutate(ref_year = year(ref_date),
+         ref_mon = month(ref_date),
+         ref_day = day(ref_date)) 
+
+df_trucks
+
+df_trucks <- df_trucks %>% 
+  group_by(ref_date) %>% 
+  mutate(total_nbound = sum(
+           sum_volume_lynden_aldergrove_north_trucks,
+           sum_volume_pacific_highway_north_trucks,
+           sum_volume_sumas_huntingdon_north_trucks, na.rm = TRUE)) %>%
+  mutate(total_sbound = sum(
+           sum_volume_lynden_aldergrove_south_trucks,
+           sum_volume_pacific_highway_south_trucks, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  select(ref_date, ref_year:ref_day, total_nbound, total_sbound)
+
+df_trucks
+
+```
+
+```{r}
+
+
+df_trucks$nbound_rollavg <- 
+  rollapply(df_trucks$total_nbound, width = 28, FUN = mean, fill = NA, align='right')
+
+df_trucks$sbound_rollavg <- 
+  rollapply(df_trucks$total_sbound, width = 28, FUN = mean, fill = NA, align='right')
+
+
+df_trucks <- 
+df_trucks %>%
+  mutate(nbound_365 = lag(nbound_rollavg, 365),
+         sbound_365 = lag(sbound_rollavg, 365)) %>% 
+  mutate(nbound_yoy = nbound_rollavg - lag(nbound_rollavg, 365),
+         sbound_yoy = sbound_rollavg - lag(sbound_rollavg, 365)) %>% 
+  mutate(nbound_pct_yoy = nbound_yoy / lag(nbound_rollavg, 365) * 100,
+         sbound_pct_yoy = sbound_yoy / lag(sbound_rollavg, 365) * 100)
+
+
+ggplot(df_trucks, aes(x = ref_date, y = nbound_rollavg)) +
+  geom_line()
 
 ```
 
