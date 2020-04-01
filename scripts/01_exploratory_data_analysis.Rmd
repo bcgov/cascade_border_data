@@ -258,3 +258,22 @@ ggplot(df_trucks, aes(x = sum_volume_pacific_highway_south_trucks)) +
 
 ```
 
+
+```{r}
+df_trucks %>%
+  filter(sum_volume_pacific_highway_north_trucks < 500) %>%
+  mutate(day_of_week = wday(ref_date, label = TRUE)) %>% 
+  select(ref_date, day_of_week, sum_volume_pacific_highway_north_trucks) %>% 
+  arrange(sum_volume_pacific_highway_north_trucks)
+```
+
+
+Some make a lot of sense: Christmas and New Year's Day, Sundays
+
+But what about Thursday, 2018-03-01? ... Not a holiday, the weather was fine (https://www.timeanddate.com/weather/canada/vancouver/historic?month=3&year=2018)
+
+Answer: missing data. Using the "poll" or "hour" option there is no data (i.e. NA) starting at 7:00 am and for the full day.
+
+Solution to test: use daily feed, omit days with NA
+
+
