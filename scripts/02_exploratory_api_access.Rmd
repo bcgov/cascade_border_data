@@ -1,0 +1,99 @@
+---
+title: "Exploring Border Crossing API"
+output: html_notebook
+---
+
+# Getting data from the API
+
+Libraries/setup
+```{r}
+#install.packages("httr")
+
+library(httr)
+library(lubridate)
+library(tidyverse)
+
+options(stringsAsFactors = FALSE)
+```
+
+
+Setup the URL and path for the API call. Anything after the ? in path will be the query from the API. Here format = CSV
+```{r}
+url <- "http://www.cascadegatewaydata.com"
+path <- "Crossing/?format=CSV"
+raw.result <- GET(url = url, path= path)
+```
+
+
+For easier to read code, you can use the query argument:
+```{r}
+url <- "http://www.cascadegatewaydata.com"
+path <- "Crossing"
+query = list(format = "CSV")
+raw.result <- GET(url = url, path= path, query = query)
+```
+
+
+Exploring result:
+```{r}
+names(raw.result)
+```
+
+
+Look at status_code. Result of 200 tells us the server received the request
+```{r}
+raw.result$status_code
+```
+
+
+For more detailed messaging use http_status
+```{r}
+http_status(raw.result)
+```
+
+
+Look at the content. It is unicode and not useful
+```{r}
+raw.result$content
+```
+
+
+Instead use content function
+```{r}
+content(raw.result)
+```
+
+
+***
+
+# Exploring queries
+
+Recreating custom query data "peacearch_N_cars_20190101_2020-03-31.csv"
+
+* Date: 2019-01-01 to 2020-03-31 (note the website uses mdy format)
+
+* Detector: none selected
+
+* Crossing: Peach Arch / Northbound / Peace Arch North Cars & Peace Arch North NEXUS
+
+* Weigh-in-Motion (WIM): none selected
+
+Note that the query only lets you select one lane type at a time. Here only car is selected.
+
+```{r}
+
+url <- "http://www.cascadegatewaydata.com"
+path <- "Crossing"
+query <- list(id=134, start="01/01/2019", end="03/31/2020", data="avg-delay,sum-vol",
+              dir="Northbound",lane="car",dg = "Day",tg="Day", format="CSV" )
+
+raw <- GET(url = url, path = path, query = query) 
+http_status(raw)
+```
+
+```{r}
+peacearch_N_cars <- content(raw)
+peacearch_N_cars %>% head(5)
+```
+
+
