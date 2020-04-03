@@ -40,6 +40,32 @@ library(glue)
 # utilities
 library(here)
 library(janitor)
+library(zoo)
+
+`%notin%` <- Negate(`%in%`)
+
+# statutory holiday list
+statholiday2020 <- c("2019-01-01",
+                     "2019-01-21", # Martin Luther King Jr. Day (USA)
+                     "2019-02-18", # Family Day / President's Day
+                     "2019-04-19", # Good Friday
+                     "2019-05-20", # Victoria Day (CDN)
+                     "2019-05-27", # Memorial Day (USA)
+                     "2019-07-01", # Canada Day
+                     "2019-07-04", # Independence Day
+                     "2019-08-05", # British Columbia Day
+                     "2019-09-02", # Labour Day
+                     "2019-10-14", # Thanksgiving (CDN)
+                     "2019-11-11", # Remembrance Day
+                     "2019-11-28", # Thanksgiving (USA)
+                     "2019-12-25", # Christmas Day
+                     "2019-12-26", # Boxing Day
+                     "2020-01-01", 
+                     "2020-01-20", # Martin Luther King Jr. Day (USA)
+                     "2020-02-17" # Family Day (CDN), Washington's Birthday (USA)
+)
+
+
 
 ```
 
@@ -276,4 +302,92 @@ Answer: missing data. Using the "poll" or "hour" option there is no data (i.e. N
 
 Solution to test: use daily feed, omit days with NA
 
+
+### daily feed, remove NA days
+
+```{r}
+
+df_trucks_prelim <-
+  read_csv(here("data", "pacific_NS_trucks_2019-01-01_2020-04-02.csv"))
+
+df_trucks <-
+df_trucks_prelim %>% 
+  clean_names() %>% 
+  mutate(ref_date = as_date(group_starts)) %>% 
+  mutate(ref_year = year(ref_date),
+         ref_mon = month(ref_date),
+         ref_day = day(ref_date)) %>% 
+  select(ref_date, contains("volume"))
+
+df_trucks
+
+```
+
+
+```{r}
+
+df_trucks_day <-
+df_trucks %>% 
+  group_by(ref_date) %>% 
+  summarise(total_n = sum(sum_volume_pacific_highway_north_trucks),
+            total_s = sum(sum_volume_pacific_highway_south_trucks))
+
+df_trucks_day
+```
+
+```{r}
+
+
+df_trucks_day_filt <-
+df_trucks_day %>%
+  mutate(dow = wday(ref_date)) %>%
+  # remove Saturday and Sunday
+  filter(dow %in% c(2:6)) %>% 
+  # remove stat holidays
+  filter(ref_date %notin% as_date(statholiday2020))
+
+df_trucks_day_filt
+```
+
+
+
+```{r}
+
+ggplot(df_trucks_day_filt, aes(x = ref_date, y = total_n)) +
+  geom_point()
+
+```
+
+
+
+```{r}
+df_trucks_day_filt$nbound_rollavg <- 
+  rollapply(df_trucks_day_filt$total_n, width = 5, 
+            FUN = mean, fill = NA, 
+            #align='right', 
+            na.rm = TRUE)
+
+df_trucks_day_filt
+```
+
+
+```{r}
+
+p <- 
+ggplot(df_trucks_day_filt, aes(x = ref_date, y = nbound_rollavg)) +
+  geom_point() +
+  geom_smooth()
+
+p
+```
+
+
+```{r}
+p +
+  labs(title = "Pacific Highway, northbound trucks",
+       subtitle = "5-day rolling average",
+       source = "http://www.cascadegatewaydata.com/")
+
+ggsave("PacificHwy_truck_nbound.png")
+```
 
