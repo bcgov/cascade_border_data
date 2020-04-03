@@ -64,8 +64,6 @@ content(raw.result)
 ```
 
 
-***
-
 # Exploring queries
 
 Recreating custom query data "peacearch_N_cars_20190101_2020-03-31.csv"
@@ -95,5 +93,193 @@ http_status(raw)
 peacearch_N_cars <- content(raw)
 peacearch_N_cars %>% head(5)
 ```
+
+## Options for selecting aggregated data
+
+Note that some measurement of time is needed, without it the results return only the valid crossing IDs and their attributes.
+```{r}
+query <- list(id=134, data="avg-delay,sum-vol",
+              dir="Northbound",lane="car", format="CSV" )
+
+peacearch_N_cars_test <- GET(url = url, path = path, query = query) %>%
+  content()
+
+peacearch_N_cars_test
+```
+
+
+Year - Returns results aggregated by month. Ignores any group by values. Can only select one year at a time
+```{r}
+query <- list(id=134, year="2019", data="avg-delay,sum-vol",
+              dir="Northbound",lane="car", format="CSV" )
+
+peacearch_N_cars_test <- GET(url = url, path = path, query = query) %>%
+  content()
+
+peacearch_N_cars_test
+```
+
+
+Month - When selecting data by Year (above), can filter to receive results for only one month. This returns results aggregated by day. Can select only one month.
+```{r}
+query <- list(id=134, year = "2019", month = "3", data="avg-delay,sum-vol",
+              dir="Northbound", lane="car", format="CSV" )
+
+peacearch_N_cars_test <- GET(url = url, path = path, query = query) %>%
+  content()
+
+peacearch_N_cars_test
+```
+
+Day - When selecting data by Year and filtering by month (above), can filter to receive results for only one day. Returns results aggregated by 5 minutes. Can only select one day.
+```{r}
+query <- list(id=134, year = "2019", month = "3", day = "5", data="avg-delay,sum-vol",
+              dir="Northbound", lane="car", format="CSV" )
+
+peacearch_N_cars_test <- GET(url = url, path = path, query = query) %>%
+  content()
+
+peacearch_N_cars_test
+```
+
+Start/end date - When providing a start date, an end date also needs to be provided. To get up-to-date results, could link end date to sys.date but this does not work in an app to update the data. Here, using yesterday as the end date to get a full days worth of data.
+```{r}
+
+end_date <- Sys.Date()-1
+end_date_char <- paste0(month(end_date), "/", day(end_date), "/", year(end_date))
+
+query <- list(id=134, start="01/01/2019", end=end_date_char, data="avg-delay,sum-vol",
+              dir="Northbound",lane="car",dg = "Day",tg="Day", format="CSV" )
+# 
+peacearch_N_cars <- GET(url = url, path = path, query = query) %>% content()
+peacearch_N_cars
+```
+
+## Data manipulation
+
+Add in some date indicators (Year, Week of the Year, Day of the Week)
+```{r}
+peacearch_N_cars_dates <- peacearch_N_cars %>%
+mutate(Week = week(`Group Starts`),
+       Year = year(`Group Starts`),
+       DayOfWeek = wday(`Group Starts`))
+```
+
+
+Summarize by week of the year (exclude partial weeks). Note that start of week is Jan 1 and not necessarily Sunday/Monday, etc.
+```{r}
+peacearch_N_cars_byweek <- peacearch_N_cars_dates %>%
+  group_by(Year, Week) %>%
+  mutate(First = min(`Group Starts`),
+         Last = max(`Group Starts`)) %>%
+  group_by(Year, Week, First, Last) %>%
+  summarize(NumDays = n(),
+            Volume = sum(`Sum - Volume (Peace Arch)`, na.rm = TRUE)) %>%
+  filter(NumDays == 7) %>% ungroup()
+
+peacearch_N_cars_byweek
+```
+
+Chart data by week of the year
+```{r}
+colours <- c(`2019` = "black", `2020` = "blue")
+
+peacearch_N_cars_byweek %>%
+  ggplot(aes(x=Week, y = Volume, fill=as.character(Year))) +
+  geom_bar(stat= "identity", position = "identity", aes(alpha = 0.3)) +
+  scale_fill_manual(values = colours) +
+  theme_classic() +
+  scale_x_continuous(expand= c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  guides(alpha = "none",
+         fill = guide_legend(title = "Year")) +
+  labs(title ="Northbound Car Border Crossings through the Peace Arch by Week")
+  
+```
+
+
+
+Write a function to generate charts by lane type, summarizing all northbound border crossings
+
+```{r}
+query_by_crossing_id_and_lane <- function(id, lane) {
+  
+  url <- "http://www.cascadegatewaydata.com"
+  path <- "Crossing/"
+  query <- list(id=id, start="01/01/2019", end=end_date_char, data="sum-vol",
+              dir="Northbound",lane=lane, dg = "Day",tg="Day", format="CSV" )
+  
+  data <- GET(url = url, path = path, query = query) %>% content()
+  
+  data
+  
+}
+
+chart_volume_by_week <- function(lane){
+
+  ids <- c(134,135,136,137)
+
+  data <- purrr::map_dfc(ids, query_by_crossing_id_and_lane, lane = lane) %>%
+    group_by(`Group Starts`) %>%
+    summarize(sum = sum(`Sum - Volume (Peace Arch)`, 
+                      `Sum - Volume (Pacific Highway)`, 
+                      `Sum - Volume (Lynden/Aldergrove)`, 
+                      `Sum - Volume (Sumas/Huntingdon)`, na.rm = TRUE)) %>%
+    mutate(Week = week(`Group Starts`),
+           Year = year(`Group Starts`),   
+           DayOfWeek = wday(`Group Starts`)) %>%
+    group_by(Year, Week) %>%
+    mutate(First = min(`Group Starts`),
+           Last = max(`Group Starts`)) %>%
+    group_by(Year, Week, First, Last) %>%
+    summarize(NumDays = n(),
+              Volume = sum(sum, na.rm = TRUE)) %>%
+    filter(NumDays == 7) %>% ungroup()
+
+  chart <- data %>%
+    ggplot(aes(x=Week, y = Volume, fill=as.character(Year))) +
+    geom_bar(stat= "identity", position = "identity", aes(alpha = 0.3)) +
+    scale_fill_manual(values = colours) +
+    theme_classic() +
+    scale_x_continuous(expand= c(0,0)) +
+    scale_y_continuous(expand = c(0,0)) +
+    guides(alpha = "none",
+           fill = guide_legend(title = "Year")) +
+    labs(title =paste("Northbound", lane ,"Border Crossings by Week"))
+
+  chart
+}
+```
+
+
+```{r message = FALSE}
+car_chart <- chart_volume_by_week("Car")
+truck_chart <- chart_volume_by_week("Truck")
+bus_chart <- chart_volume_by_week("Bus")
+fast_chart <- chart_volume_by_week("Fast")
+nexus_chart <- chart_volume_by_week("Nexus")
+```
+
+```{r}
+car_chart
+truck_chart
+bus_chart
+fast_chart
+nexus_chart
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
