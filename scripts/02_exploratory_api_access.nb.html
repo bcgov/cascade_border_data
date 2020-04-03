@@ -1772,12 +1772,12 @@ $(document).ready(function () {
 <p>Libraries/setup</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2luc3RhbGwucGFja2FnZXMoYyhcImh0dHJcIiwgXCJqc29ubGl0ZVwiKSlcblxubGlicmFyeShodHRyKVxubGlicmFyeShqc29ubGl0ZSlcbmxpYnJhcnkobHVicmlkYXRlKVxuXG5vcHRpb25zKHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRSlcbmBgYCJ9 -->
-<pre class="r"><code>#install.packages(c(&quot;httr&quot;, &quot;jsonlite&quot;))
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2luc3RhbGwucGFja2FnZXMoXCJodHRyXCIpXG5cbmxpYnJhcnkoaHR0cilcbmxpYnJhcnkobHVicmlkYXRlKVxubGlicmFyeSh0aWR5dmVyc2UpXG5cbm9wdGlvbnMoc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFKVxuYGBgIn0= -->
+<pre class="r"><code>#install.packages(&quot;httr&quot;)
 
 library(httr)
-library(jsonlite)
 library(lubridate)
+library(tidyverse)
 
 options(stringsAsFactors = FALSE)</code></pre>
 <!-- rnb-source-end -->
@@ -1786,9 +1786,10 @@ options(stringsAsFactors = FALSE)</code></pre>
 <p>Setup the URL and path for the API call. Anything after the ? in path will be the query from the API. Here format = CSV</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudXJsIDwtIFwiaHR0cDovL3d3dy5jYXNjYWRlZ2F0ZXdheWRhdGEuY29tXCJcbnBhdGggPC0gXCJDcm9zc2luZy8/Zm9ybWF0PUNTVlwiXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudXJsIDwtIFwiaHR0cDovL3d3dy5jYXNjYWRlZ2F0ZXdheWRhdGEuY29tXCJcbnBhdGggPC0gXCJDcm9zc2luZy8/Zm9ybWF0PUNTVlwiXG5yYXcucmVzdWx0IDwtIEdFVCh1cmwgPSB1cmwsIHBhdGg9IHBhdGgpXG5gYGAifQ== -->
 <pre class="r"><code>url &lt;- &quot;http://www.cascadegatewaydata.com&quot;
-path &lt;- &quot;Crossing/?format=CSV&quot;</code></pre>
+path &lt;- &quot;Crossing/?format=CSV&quot;
+raw.result &lt;- GET(url = url, path= path)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1847,9 +1848,8 @@ $message
 <p>Look at the content. It is unicode and not useful</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmF3LnJlc3VsdCRjb250ZW50XG5cbmBgYCJ9 -->
-<pre class="r"><code>raw.result$content
-</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmF3LnJlc3VsdCRjb250ZW50XG5gYGAifQ== -->
+<pre class="r"><code>raw.result$content</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-output-begin eyJkYXRhIjoiICBbMV0gNDkgNDQgMmMgNGUgNjEgNmQgNjUgMmMgNDQgNjkgNzIgNjUgNjMgNzQgNjkgNmYgNmUgNzMgNGYgNjYgNTQgNzIgNjEgNzYgNjUgNmMgMmMgNGMgNjEgNmUgNjUgNTQgNzkgNzAgNjUgNzMgMGQgMGEgMzEgMzMgMzQgMmMgNTAgNjVcbiBbNDVdIDYxIDYzIDY1IDIwIDQxIDcyIDYzIDY4IDJjIDIyIDUzIDZmIDc1IDc0IDY4IDYyIDZmIDc1IDZlIDY0IDJjIDRlIDZmIDcyIDc0IDY4IDYyIDZmIDc1IDZlIDY0IDIyIDJjIDIyIDQzIDYxIDcyIDJjIDRlIDY1IDc4IDc1IDczIDIyXG4gWzg5XSAwZCAwYSAzMSAzMyAzNSAyYyA1MCA2MSA2MyA2OSA2NiA2OSA2MyAyMCA0OCA2OSA2NyA2OCA3NyA2MSA3OSAyYyAyMiA1MyA2ZiA3NSA3NCA2OCA2MiA2ZiA3NSA2ZSA2NCAyYyA0ZSA2ZiA3MiA3NCA2OCA2MiA2ZiA3NSA2ZSA2NFxuWzEzM10gMjIgMmMgMjIgNDMgNjEgNzIgMmMgNDIgNzUgNzMgMmMgNDYgNjEgNzMgNzQgMmMgNGUgNjUgNzggNzUgNzMgMmMgNTQgNzIgNzUgNjMgNmIgMjIgMGQgMGEgMzEgMzMgMzYgMmMgNGMgNzkgNmUgNjQgNjUgNmUgMmYgNDEgNmMgNjRcblsxNzddIDY1IDcyIDY3IDcyIDZmIDc2IDY1IDJjIDIyIDRlIDZmIDcyIDc0IDY4IDYyIDZmIDc1IDZlIDY0IDJjIDUzIDZmIDc1IDc0IDY4IDYyIDZmIDc1IDZlIDY0IDIyIDJjIDIyIDQzIDYxIDcyIDJjIDU0IDcyIDc1IDYzIDZiIDJjIDRlXG5bMjIxXSA2NSA3OCA3NSA3MyAyMiAwZCAwYSAzMSAzMyAzNyAyYyA1MyA3NSA2ZCA2MSA3MyAyZiA0OCA3NSA2ZSA3NCA2OSA2ZSA2NyA2NCA2ZiA2ZSAyYyAyMiA0ZSA2ZiA3MiA3NCA2OCA2MiA2ZiA3NSA2ZSA2NCAyYyA1MyA2ZiA3NSA3NFxuWzI2NV0gNjggNjIgNmYgNzUgNmUgNjQgMjIgMmMgMjIgNDMgNjEgNzIgMmMgNTQgNzIgNzUgNjMgNmIgMmMgNGUgNjUgNzggNzUgNzMgMjIgMGQgMGFcbiJ9 -->
 <pre><code>  [1] 49 44 2c 4e 61 6d 65 2c 44 69 72 65 63 74 69 6f 6e 73 4f 66 54 72 61 76 65 6c 2c 4c 61 6e 65 54 79 70 65 73 0d 0a 31 33 34 2c 50 65
@@ -1877,7 +1877,7 @@ cols(
   LaneTypes = [31mcol_character()[39m
 )</code></pre>
 <!-- rnb-output-end -->
-<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInNwZWNfdGJsX2RmIiwidGJsX2RmIiwidGJsIiwiZGF0YS5mcmFtZSJdLCJuY29sIjo0LCJucm93Ijo0fSwicmRmIjoiSDRzSUFBQUFBQUFBQm8xUzNXckNNQmlOMmpvczZOekdZSmMrUUszTU1kaWxUaGtPeE1uMHdrdGpHclZZRTBrYmYrNzJhSHVVUGNpd1M5cGswZ3BqaGZZN1BlZjBmTi9YOXIwN2ViQW1GZ0NnQUFyRkhDaVlBb0ppWjNqZmZHd0NZT1RGWFE0WW9DVHJYcmh1QkRERVdaRzFOZjJVZHRDYWZpVVZBbFZyUUIzVjJKOEVXRU1NRWE2MUdWb3E1bklJa1RmM1VLM25MWlk3ZUZEMFZmOUFYRXdhYmQvRmJNSG9GaXVoT3VKckdEUjZuSVFlV2JpVVpEcmNqaWdQbHpQS2lXc1BLRlB3WCtLSnNVKyt2OFYwNzFJSE1udUE5enhReEowa25ubGd2OEFnVEJSN3pEaGE2ZVdsSGhPcHg4N285RmN3Q1Z6aklOTTcvOXBWeUJnSVdlSHJyc2N3Q2oxS2dyZjVtTUV0OXZXc2ZVancrTERCWituSWg0Rk8xNlRsd2hBNmN5YVQwL1lTb3p0SEQxU1dnM3lJU3hSRjM2SWNNK1lMdW9sbkVTNzVGNW1aTGptV0lhcWN5R2kzanBhY3JPcFBUVGxLckNkSFdXRWpqV1hQZktTeVRKVlZ4R1RoRWYxaVRCL09mdDlGUmV3UXIrQnNtRWRDdmJOZ0F5ZWtJZFErQzFGZk0vRnk0UGdESENzVnlENERBQUE9In0= -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInNwZWNfdGJsX2RmIiwidGJsX2RmIiwidGJsIiwiZGF0YS5mcmFtZSJdLCJuY29sIjo0LCJucm93Ijo0fSwicmRmIjoiSDRzSUFBQUFBQUFBQm8xU3kwN0NRQlFkb01YUWhJY2FFNWQ4UUNrUjQ4SWRDakdZRUNUQ2dpWERkSUNHTWtPbUhSNDdQODFQOFVNTWRhYWRrYlFreGlidFBUM245Tng3Mjc1M0ovZld4QUlBRkVDaG1BTUZVMEJRN0F6dldnOHRBSXk4dU1zQkE1UmszUXZYdFFDR09DdXl0cWVmMGc3YTA2K2tRcUJxSGFpakZ2dVRBR3VJSWNMMUo0YVdpcWtPSWZMbUhxcjN2TVZ5QncrS3Z1d2ZpSXRKODhsM01Wc3d1c1ZLcUkzNEdnYk5IaWVoUnhZdUpaa09OeVBLdytXTWN1TGFBOG9VL0pkNFl1eVQ3Mjh4M2J2VWdjd2U0RDBQRkhFcmlXY2UyQzh3Q0JQRkhqT09WbnA1cWNkRTZyRXpPdjBWVEFMWE9NajB6cjkyRlRJR1FsYjRxdXN4akVLUGt1QnRQbVp3aTMwOWF4OFNQRDVzOEZrNjhtR2cwelZwdVRDRXpweko1TFM5eE9qTzBRT1Y1U0FmNGhKRjBiY294NHo1Z203aVdZUkwva1ZtcGt1T1pZZ3FKekxhYmFBbEo2dkdvNXdrbHBPanJMQ1J4ckpsUGxKUnBvb3FZckx3aUg0dnBnOW52NitpSWxhSU4zQTJ6Q09oWGxtd2dSUFNFR3FmaGFpdm1YZzNjUHdCSTk0cXpEMERBQUE9In0= -->
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["ID"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Name"],"name":[2],"type":["chr"],"align":["left"]},{"label":["DirectionsOfTravel"],"name":[3],"type":["chr"],"align":["left"]},{"label":["LaneTypes"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"134","2":"Peace Arch","3":"Southbound,Northbound","4":"Car,Nexus"},{"1":"135","2":"Pacific Highway","3":"Southbound,Northbound","4":"Car,Bus,Fast,Nexus,Truck"},{"1":"136","2":"Lynden/Aldergrove","3":"Northbound,Southbound","4":"Car,Truck,Nexus"},{"1":"137","2":"Sumas/Huntingdon","3":"Northbound,Southbound","4":"Car,Truck,Nexus"}],"options":{"columns":{"min":{},"max":[10],"total":[4]},"rows":{"min":[10],"max":[10],"total":[4]},"pages":{}}}
@@ -1900,11 +1900,13 @@ cols(
 <p>Note that the query only lets you select one lane type at a time. Here only car is selected.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucXVlcnkgPC0gbGlzdChpZD0xMzQsIHN0YXJ0PVwiMDEvMDEvMjAxOVwiLCBlbmQ9XCIwMy8zMS8yMDIwXCIsIGRhdGE9XCJhdmctZGVsYXksc3VtLXZvbFwiLGRpcj1cIk5vcnRoYm91bmRcIixsYW5lPVwiY2FyXCIsZGcgPSBcIkRheVwiLHRnPVwiRGF5XCIsIGZvcm1hdD1cIkNTVlwiIClcbiNxdWVyeSA8LSBsaXN0KElEID0gMTM0LCBmb3JtYXQgPSBcIkNTVlwiKVxucGF0aCA8LSBcIkNyb3NzaW5nXCJcbiNxdWVyeSA8LSBsaXN0KGlkPTEzNCwgc3RhcnQ9XCIwMS8wMS8yMDEwXCIsIGVuZD1cIjAzLzAxLzIwMTBcIiwgZGF0YT1cImF2Zy1kZWxheSxhdmctcmF0ZVwiLCBmb3JtYXQ9XCJDU1ZcIilcbnJhdyA8LSBHRVQodXJsID0gdXJsLCBwYXRoID0gcGF0aCwgcXVlcnkgPSBxdWVyeSkgXG5odHRwX3N0YXR1cyhyYXcpXG5gYGAifQ== -->
-<pre class="r"><code>query &lt;- list(id=134, start=&quot;01/01/2019&quot;, end=&quot;03/31/2020&quot;, data=&quot;avg-delay,sum-vol&quot;,dir=&quot;Northbound&quot;,lane=&quot;car&quot;,dg = &quot;Day&quot;,tg=&quot;Day&quot;, format=&quot;CSV&quot; )
-#query &lt;- list(ID = 134, format = &quot;CSV&quot;)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG51cmwgPC0gXCJodHRwOi8vd3d3LmNhc2NhZGVnYXRld2F5ZGF0YS5jb21cIlxucGF0aCA8LSBcIkNyb3NzaW5nXCJcbnF1ZXJ5IDwtIGxpc3QoaWQ9MTM0LCBzdGFydD1cIjAxLzAxLzIwMTlcIiwgZW5kPVwiMDMvMzEvMjAyMFwiLCBkYXRhPVwiYXZnLWRlbGF5LHN1bS12b2xcIixcbiAgICAgICAgICAgICAgZGlyPVwiTm9ydGhib3VuZFwiLGxhbmU9XCJjYXJcIixkZyA9IFwiRGF5XCIsdGc9XCJEYXlcIiwgZm9ybWF0PVwiQ1NWXCIgKVxuXG5yYXcgPC0gR0VUKHVybCA9IHVybCwgcGF0aCA9IHBhdGgsIHF1ZXJ5ID0gcXVlcnkpIFxuaHR0cF9zdGF0dXMocmF3KVxuYGBgIn0= -->
+<pre class="r"><code>
+url &lt;- &quot;http://www.cascadegatewaydata.com&quot;
 path &lt;- &quot;Crossing&quot;
-#query &lt;- list(id=134, start=&quot;01/01/2010&quot;, end=&quot;03/01/2010&quot;, data=&quot;avg-delay,avg-rate&quot;, format=&quot;CSV&quot;)
+query &lt;- list(id=134, start=&quot;01/01/2019&quot;, end=&quot;03/31/2020&quot;, data=&quot;avg-delay,sum-vol&quot;,
+              dir=&quot;Northbound&quot;,lane=&quot;car&quot;,dg = &quot;Day&quot;,tg=&quot;Day&quot;, format=&quot;CSV&quot; )
+
 raw &lt;- GET(url = url, path = path, query = query) 
 http_status(raw)</code></pre>
 <!-- rnb-source-end -->
@@ -1936,7 +1938,7 @@ cols(
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGVhY2VhcmNoX05fY2FycyAlPiUgaGVhZCg1KVxuYGBgIn0= -->
 <pre class="r"><code>peacearch_N_cars %&gt;% head(5)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInRibF9kZiIsInRibCIsImRhdGEuZnJhbWUiXSwibmNvbCI6MywibnJvdyI6NX0sInJkZiI6Ikg0c0lBQUFBQUFBQUJsMVN6VTdDUUJCZUtJVlFoWmpvUVU3MkpoNW9JdWpGVXdra3hwTkUwSEIwTGVVbmxpNXB0LzZkZkFMdmVoVVNqYS9nd2JmdzRzSDMwRkJuL3hMYlNUYmZ6TGZmN3N6czdFbTczekQ2QmtKSVExbytnelFkWEpSdmRYYnIrM1dFY2xtSU1paUhpZ3h2UUxYT3BVZ3JBK3JOVCtQdEhCekErSVBqU3M4VStISXY4UGViWFppOFNIYzhISWJnck1IS1NyTFFPZTRlOVIwcXd6d1BhZm9rdlNPK0swOHFVanZ0dFFDV3NIaFY5bGFEbTczOXlPekpyc2k0T3VSbWJ5QmxRcjk0NTRFOW53dDhmaEM0T0JENCtpWGx5VnA4UEhWVkY1b2tWdzhERXMzTUxzVUJEU1czMmJ3YW1UV3o3WHI0MXF4MlhPeTRaak53eGp0eXY5S05wckIvUnJ4bzZpWUZQR00yVGpWc0REREYxakNBL0ttYWlnRzV0bFJkSmZhNmJBeHhIUCtJQjBxSUMyUkdKOFFIYVpaTlZVOWx5UVFwWWkzeTJkV0Rtak9PL012YVhvT1Z3dmVGbGFTdi8vTTFrVE9uV3REVmVGMS9OSUZKeXFmMDhJWHJ5YUFNUGZBV3JGa3c4ZFYvTUlBTkxVb29WanJESVo1aXhQU1hmeStmeEc3T0FnQUEifQ== -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInRibF9kZiIsInRibCIsImRhdGEuZnJhbWUiXSwibmNvbCI6MywibnJvdyI6NX0sInJkZiI6Ikg0c0lBQUFBQUFBQUJsMVN6VTdDUUJCZUtJVlFoWmpvUVU3MkpoNW9Bc1NMcHhKSWpDZUpvT0hvV3NwUExGM1NidjA3K1FUZTlTb2tHbC9CZzIvaHhZUHZvYUhPL2lXMmsyeSttVysvM1puWjJaUE9vR2tNRElTUWhyUjhCbWs2dUNqZjd0WWIrdzJFY2xtSU1paUhpZ3h2UUxYSnBVZ3JBK3F0VCtQdEhCekErSVBqV3Q4VStISXY4UGViWFppOFNIYzhISWJnYk1ES1NyTFFQZTRkRFJ3cXd6d1BhZm9rdlNPK0swOHFVanZ0dHdGV3NIaFY5azZUbTczN3lPekpyc2k0T3VKbWJ5RmxRcjk4NTRHOVdBaDhmaEM0UEJENCtpWGx5VnA4UEhOVkY1b2sxdzhERXMzTkhzVUJEU1czM2JvYW16V3o0M3I0MXF4MlhleTRaaXR3Sm50eXY5S0xackIvUnJ4bzVpWUZQR00yVGpWc0RESEYxaWlBL0ttYWlnRzV0bFJkSmZhNmJBeHhIUCtJQjBxSUMyUk9wOFFIYVpaTlZVOWx5UVFwWWlQeTJkWERtak9KL010YXZjNUs0ZnZDU3RMWC8vbWF5SmxUTGVocXZLNC9uc0lrNVZONitNTDFaRkNHSG5nTDFqeVkrdW8vR01DR0ZpVVVLNTNoRUU4eFl2cXJQemUzbFovT0FnQUEifQ== -->
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
 {"columns":[{"label":["Group Starts"],"name":[1],"type":["S3: POSIXct"],"align":["right"]},{"label":["Avg - Delay (Peace Arch)"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Sum - Volume (Peace Arch)"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"2019-01-01","2":"7.8","3":"2782"},{"1":"2019-01-02","2":"11.8","3":"2642"},{"1":"2019-01-03","2":"6.3","3":"2503"},{"1":"2019-01-04","2":"12.2","3":"2717"},{"1":"2019-01-05","2":"5.0","3":"3310"}],"options":{"columns":{"min":{},"max":[10],"total":[3]},"rows":{"min":[10],"max":[10],"total":[5]},"pages":{}}}
