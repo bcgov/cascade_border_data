@@ -142,7 +142,7 @@ peacearch_N_cars_test <- GET(url = url, path = path, query = query) %>%
 peacearch_N_cars_test
 ```
 
-Start/end date - When providing a start date, an end date also needs to be provided. To get up-to-date results, could link end date to sys.date but this does not work in an app to update the data. Here, using yesterday as the end date to get a full days worth of data.
+Start/end date - When providing a start date, an end date also needs to be provided. To get up-to-date results, could link end date to sys.date but this does not work in an app to update the data. Here, using yesterday as the end date to get a full days worth of data. Aside: does lubridate function today() work on servers? Can pass it a timezone.
 ```{r}
 
 end_date <- Sys.Date()-1
@@ -229,19 +229,28 @@ chart_volume_by_week <- function(lane){
            Year = year(`Group Starts`),   
            DayOfWeek = wday(`Group Starts`)) %>%
     group_by(Year, Week) %>%
-    mutate(First = min(`Group Starts`),
-           Last = max(`Group Starts`)) %>%
-    group_by(Year, Week, First, Last) %>%
+    mutate(First = paste(month(min(`Group Starts`), label = TRUE, abbr = TRUE), day(min(`Group Starts`)))) %>%
+    group_by(Year, Week, First) %>%
     summarize(NumDays = n(),
               Volume = sum(sum, na.rm = TRUE)) %>%
     filter(NumDays == 7) %>% ungroup()
 
+  
+  ## Chart attributes
+  colours <- c(`2019` = "black", `2020` = "blue")
+  
+  ## Date labels to better reference volumes
+  ## Dates based on 2019 and are 1 day off for 2020 after Feb 29...
+  x_labs <- data %>%
+    filter(Year == 2019, Week %in% seq(1, 52, 4)) %>%
+    pull(First) 
+  
   chart <- data %>%
     ggplot(aes(x=Week, y = Volume, fill=as.character(Year))) +
     geom_bar(stat= "identity", position = "identity", aes(alpha = 0.3)) +
     scale_fill_manual(values = colours) +
     theme_classic() +
-    scale_x_continuous(expand= c(0,0)) +
+    scale_x_continuous(expand= c(0,0), breaks = seq(1, 52, 4), labels = x_labs) +
     scale_y_continuous(expand = c(0,0)) +
     guides(alpha = "none",
            fill = guide_legend(title = "Year")) +
